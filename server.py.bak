@@ -1,0 +1,108 @@
+# __author: Lambert
+# __date: 2017/10/30 11:14
+import tornado.ioloop
+import tornado.web
+import ui_methods as mt
+import ui_modules as md
+import time
+
+settings = {
+    "template_path": 'tpl',
+    "static_path": 'statics',
+    "static_url_prefix": '/sss/',
+    "cookie_secret": "123456",  # 设置签名密钥
+    "ui_methods": mt,
+    "ui_modules": md
+}
+nameList = []
+container = {}
+
+
+class Session:
+    def __init__(self):
+        pass
+
+    def set_session(self):
+        pass
+
+    def get_value(self):
+        pass
+
+    def set_value(self):
+        pass
+
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        user = self.get_secure_cookie("user", None)
+        if user:
+            import hashlib
+            import time
+            obj = hashlib.md5()
+            obj.update(bytes(str(time.time()), encoding="utf8"))
+            random_str = obj.hexdigest()
+            container[random_str] = {}
+            container[random_str]["is_login"] = True
+            container[random_str]["username"] = user
+            self.set_cookie("session", random_str)
+            self.render("index.html", nameList=nameList, npm="NPM", user=user)
+        else:
+            self.redirect("/login")
+
+    def post(self):
+        name = self.get_argument("name")
+        nameList.append(name)
+        self.render("index.html", nameList=nameList, npm="NPM")
+
+
+class ManagerHandler(tornado.web.RequestHandler):
+    def get(self):
+        random_str = self.get_cookie("session")
+        current_user_info = container.get(random_str, None)
+        if not current_user_info:
+            self.redirect("/login")
+        else:
+            if current_user_info.get("is_login", None):
+                self.write("欢迎%s" % current_user_info["username"])
+            else:
+                self.redirect("/login")
+
+
+class LoginHandler(tornado.web.RequestHandler):
+    def get(self, *args, **kwargs):
+        self.render("login.html")
+
+    def post(self, *args, **kwargs):
+        user = self.get_argument('user')
+        pwd = self.get_argument('password')
+        check = self.get_argument("auto", None)
+        if user == "admin" and pwd == "admin":
+            if check:
+                self.set_secure_cookie("user", user, expires_days=7)  # 设置7天过期时间
+            else:
+                r = time.time() + 10
+                self.set_secure_cookie("user", user, expires=r)  # 设置默认过期时间
+            self.redirect("/index")
+        else:
+            self.render("login.html")
+
+
+class LogoutHandler(tornado.web.RequestHandler):
+    def get(self, *args, **kwargs):
+        self.set_secure_cookie("user", self.get_secure_cookie("user"), expires=time.time())
+        self.redirect("/login")
+
+
+def make_app():
+    return tornado.web.Application([
+        (r"/index", MainHandler),
+        (r"/login", LoginHandler),
+        (r"/logout", LogoutHandler),
+        (r"/admin", ManagerHandler),
+    ], **settings)
+
+
+if __name__ == "__main__":
+    app = make_app()
+    app.listen(8000)
+    tornado.ioloop.IOLoop.current().start()

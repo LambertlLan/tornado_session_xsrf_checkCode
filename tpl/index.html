@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+    <!--给静态文件设置版本号，实质为文件md5加密字符串-->
+    <link rel="stylesheet" href="{{static_url('style.css')}}">
+</head>
+<body>
+<h1>index</h1>
+欢迎{{user}}
+<a href="/logout">退出</a>
+<form action="/index" method="post">
+    <input type="text" name="name">
+    <input type="submit" value="提交">
+</form>
+<a href="/admin">管理页面</a>
+<h2>{{npm}}</h2>
+<h2>{{foo(npm)}}</h2>
+<h2>{% module Customer(npm) %}</h2>
+<ul>
+    {% for item in nameList %}
+    <li>{{item}}</li>
+    {% end %}
+</ul>
+</body>
+</html>

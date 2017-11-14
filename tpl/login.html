@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+</head>
+<body>
+<form action="/login" method="post">
+    <!-- 生成xsrf签名-->
+    {% raw xsrf_form_html() %}
+    <!--ajax提交需要从cookie中获取-->
+    <input type="text" name="user" placeholder="账号">
+    <input type="password" name="password" placeholder="密码">
+    <input type="checkbox" name="auto" value="1">7天免登陆
+    <div>
+        <input type="text" name="code" placeholder="验证码">
+        <img src="/check_code" onclick="changeCode(this);" alt="验证码">
+    </div>
+    <input type="submit" value="提交">
+</form>
+<script>
+    function changeCode(that) {
+        that.src += '?'
+    }
+</script>
+</body>
+</html>
